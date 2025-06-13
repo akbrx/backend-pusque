@@ -25,8 +25,8 @@ try {
 }
 
 
-app.options('*', cors({
-  origin: ['http://localhost:8080', 'http://localhost:3000'],
+app.options(cors({
+  origin: '*',
   credentials: true
 }));
 

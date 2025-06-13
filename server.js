@@ -27,10 +27,11 @@ try {
 }
 
 
-app.options(cors({
-  origin: '*',
+app.use(cors({
+  origin: ['http://localhost:8080', 'https://pusque.vercel.app'], // tambahkan semua frontend yang kamu pakai
   credentials: true
 }));
+
 
 app.use(cookieParser());
 app.use(express.json());

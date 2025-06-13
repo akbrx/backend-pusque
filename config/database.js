@@ -11,5 +11,5 @@ const sequelize = new Sequelize({
   host: process.env.DB_HOST,
 });
 
-export default sequelize; // ✅ Benar
-
+module.exports = sequelize;
+export default db;

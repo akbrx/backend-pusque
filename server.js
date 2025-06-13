@@ -26,8 +26,8 @@ try {
 
 
 app.use(cors({
-  origin: ['http://localhost:8080', 'http://localhost:3000'],
-  credentials: true,
+  origin: 'http://localhost:8080', // allow your frontend
+  credentials: true // if you need cookies/auth
 }));
 app.use(cookieParser());
 app.use(express.json());

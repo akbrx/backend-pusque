@@ -25,10 +25,11 @@ try {
 }
 
 
-app.use(cors({
-  origin: 'http://localhost:8080', // allow your frontend
-  credentials: true // if you need cookies/auth
+app.options('*', cors({
+  origin: ['http://localhost:8080', 'http://localhost:3000'],
+  credentials: true
 }));
+
 app.use(cookieParser());
 app.use(express.json());
 app.use('/uploads', express.static('uploads')); 
@@ -36,3 +37,8 @@ app.use(router)
 app.listen(5000, () => {
   console.log('Server is running on port 5000');
 });
+app.use((req, res, next) => {
+  console.log('Incoming from origin:', req.headers.origin);
+  next();
+});
+

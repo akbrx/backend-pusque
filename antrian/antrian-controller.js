@@ -19,24 +19,6 @@ export const createAntrian = async (req, res) => {
             return res.status(404).json({ message: "User tidak ditemukan" });
         }
 
-        // --- LOGIKA BARU: CEK ANTRIAN AKTIF PENGGUNA ---
-        const existingActiveAntrian = await Antrian.findOne({
-            where: {
-                userId: userId,
-                status: {
-                    [Op.in]: ['menunggu acc admin', 'dalam antrian'] // Cari status ini
-                }
-            }
-        });
-
-        if (existingActiveAntrian) {
-            console.warn(`[BACKEND - createAntrian] User ${userId} sudah memiliki antrian aktif (ID: ${existingActiveAntrian.id}, Status: ${existingActiveAntrian.status}).`);
-            return res.status(400).json({
-                message: "Anda sudah memiliki antrian yang belum selesai. Silakan tunggu antrian Anda saat ini selesai."
-            });
-        }
-        // --- AKHIR LOGIKA BARU ---
-
         // Buat antrian baru, status otomatis 'menunggu acc admin' (default di model/database)
         const antrian = await Antrian.create({
             keluhan,
@@ -46,7 +28,7 @@ export const createAntrian = async (req, res) => {
 
         res.status(201).json({ message: "Antrian berhasil dibuat", antrian });
     } catch (error) {
-        console.error("[BACKEND - createAntrian] Error:", error); // Lebih spesifik logging
+        console.error(error);
         res.status(500).json({ message: "Internal server error" });
     }
 };

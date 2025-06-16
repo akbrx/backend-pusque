@@ -1,3 +1,4 @@
+// user-controller.js
 import Users from './user-model.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
@@ -78,8 +79,9 @@ export const Login = async (req, res) => {
         const userId = user.id;
         const name = user.name;
         const role = user.role;
-        const accsessToken = jwt.sign({ userId, name, nik, role }, process.env.ACCESS_TOKEN_SECRET, {
-            expiresIn: '20s'
+        // --- PERBAIKAN TYPO DI SINI: Pastikan konsisten menggunakan 'accessToken' ---
+        const accessToken = jwt.sign({ userId, name, nik, role }, process.env.ACCESS_TOKEN_SECRET, {
+            expiresIn: '15m' // <-- Direkomendasikan 15 menit, bukan 20 detik
         });
         const refreshToken = jwt.sign({ userId, name, nik, role }, process.env.REFRESH_TOKEN_SECRET, {
             expiresIn: '1d'
@@ -93,7 +95,8 @@ export const Login = async (req, res) => {
             httpOnly: true,
             maxAge: 24 * 60 * 60 * 1000
         });
-        res.json({ accsessToken, role });
+        // --- PERBAIKAN TYPO DI SINI: Kirim sebagai 'accessToken' agar sesuai dengan frontend ---
+        res.json({ accessToken, role }); // Kirim properti 'accessToken' yang benar
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal server error' });
@@ -121,7 +124,7 @@ export const Logout = async (req, res) => {
 
 // backend/users/users-controller.js
 export const getMe = async (req, res) => {
-  const user = await Users.findByPk(req.userId); // pastikan req.userId diisi oleh middleware auth
-  if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
-  res.json(user);
+    const user = await Users.findByPk(req.userId); // pastikan req.userId diisi oleh middleware auth
+    if (!user) return res.status(404).json({ message: "User tidak ditemukan" });
+    res.json(user);
 };

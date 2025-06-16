@@ -96,6 +96,8 @@ export const Login = async (req, res) => {
             maxAge: 24 * 60 * 60 * 1000
         });
         // --- PERBAIKAN TYPO DI SINI: Kirim sebagai 'accessToken' agar sesuai dengan frontend ---
+        console.log("[BACKEND - LOGIN] accessToken yang akan dikirim:", accessToken);
+        console.log("[BACKEND - LOGIN] Tipe accessToken yang akan dikirim:", typeof accessToken);
         res.json({ accessToken, role }); // Kirim properti 'accessToken' yang benar
     } catch (error) {
         console.error(error);

@@ -11,8 +11,9 @@ import { deleteAntrian } from '../antrian/antrian-controller.js';
 import { mundurkanAntrian } from '../antrian/antrian-controller.js';
 import { getAntrianUser } from '../antrian/antrian-controller.js';
 import { simpanPrediksiAntrian } from '../antrian/antrian-controller.js';
+import { getRiwayatAntrianSelesai } from '../antrian/antrian-controller.js';
 import { getPasienPerBulan } from '../statistik/statistik-controller.js';
-import { getAllFeedback, getUserFeedback, createFeedback, getRiwayatAntrianSelesai } from '../feedback/feedback-controller.js';
+import { getAllFeedback, getUserFeedback, createFeedback } from '../feedback/feedback-controller.js';
 
 const router = express.Router();
 

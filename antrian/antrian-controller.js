@@ -212,6 +212,28 @@ export const getAntrianUser = async (req, res) => {
     }
 };
 
+export const getRiwayatAntrianSelesai = async (req, res) => {
+    try {
+        const userId = req.userId; // userId dari token otentikasi
+        console.log('[BACKEND - getRiwayatAntrianSelesai] Menerima permintaan riwayat antrian selesai untuk userId:', userId);
+
+        const riwayatAntrian = await Antrian.findAll({
+            where: { userId: userId, status: 'selesai' }, // Cari antrian yang statusnya 'selesai'
+            order: [['updatedAt', 'DESC']], // Urutkan berdasarkan waktu selesai terbaru
+            include: [{
+                model: Users,
+                attributes: ['name', 'nik'] // Sertakan data user jika diperlukan
+            }]
+        });
+
+        console.log(`[BACKEND - getRiwayatAntrianSelesai] Ditemukan ${riwayatAntrian.length} riwayat antrian selesai.`);
+        res.json(riwayatAntrian);
+    } catch (error) {
+        console.error('[BACKEND - getRiwayatAntrianSelesai] Error fetching riwayat antrian selesai:', error.message);
+        res.status(500).json({ message: 'Internal server error saat mengambil riwayat antrian selesai' });
+    }
+};
+
 export const simpanPrediksiAntrian = async (req, res) => {
     const { id } = req.params;
     const { entryMinutes, durationMinutes } = req.body;

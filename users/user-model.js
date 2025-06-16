@@ -1,9 +1,16 @@
 import { Sequelize } from "sequelize";
 import db from "../config/database.js";
+import Antrian from "../antrian/antrian-model.js";     // Import Antrian model
+import Feedback from "../feedback/feedback-model.js"; // Import Feedback model
 
 const { DataTypes } = Sequelize;
 
 const User = db.define('users', {
+    id: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true
+    },
     name: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -49,6 +56,13 @@ const User = db.define('users', {
     },
 }, {
     freezeTableName: true,
+    timestamps: true // Pastikan ini true
 });
+
+// Definisikan asosiasi:
+// User memiliki banyak Antrian
+User.hasMany(Antrian, { foreignKey: 'userId' });
+// User bisa memiliki banyak Feedback (jika userId di Feedback adalah pembuat feedback)
+User.hasMany(Feedback, { foreignKey: 'userId' });
 
 export default User;

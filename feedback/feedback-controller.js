@@ -6,7 +6,7 @@ import Users from "../users/user-model.js"; // Import model User
 export const getAllFeedback = async (req, res) => {
     try {
         console.log("[BACKEND - getAllFeedback] Menerima permintaan untuk semua feedback.");
-        // Ambil semua feedback dan sertakan data pengguna serta antrian jika diperlukan
+        // --- AKTIFKAN KEMBALI KLAUSA INCLUDE UNTUK PRODUKSI ---
         const feedbacks = await Feedback.findAll({
             include: [
                 {
@@ -26,6 +26,7 @@ export const getAllFeedback = async (req, res) => {
             ],
             order: [['createdAt', 'DESC']] // Urutkan feedback terbaru di atas
         });
+        // --- AKHIR AKTIVASI KLAUSA INCLUDE ---
 
         // Format ulang data agar sesuai dengan frontend (e.g., fb.user.name)
         const formattedFeedbacks = feedbacks.map(feedback => {
@@ -120,5 +121,29 @@ export const getUserFeedback = async (req, res) => {
     } catch (error) {
         console.error("[BACKEND - getUserFeedback] Error fetching user feedback:", error);
         res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+// FUNGSI getRiwayatAntrianSelesai (dari antrian-controller.js)
+// Asumsi ini sudah diimpor dan diekspor dengan benar di tempat lain
+// export const getRiwayatAntrianSelesai = async (req, res) => { /* ... */ };
+
+export const simpanPrediksiAntrian = async (req, res) => {
+    const { id } = req.params;
+    const { entryMinutes, durationMinutes } = req.body;
+
+    try {
+        const antrian = await Antrian.findByPk(id);
+        if (!antrian) return res.status(404).json({ message: "Antrian tidak ditemukan" });
+
+        antrian.estimasi_masuk = entryMinutes;
+        antrian.durasi_periksa = durationMinutes;
+
+        await antrian.save();
+
+        res.json({ message: "Prediksi berhasil disimpan", antrian });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Gagal menyimpan prediksi" });
     }
 };

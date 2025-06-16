@@ -13,10 +13,25 @@ import Feedback from './feedback/feedback-model.js';
 dotenv.config();
 const app = express();
 
+
+// Fungsi untuk membuat direktori jika belum ada
+    const createUploadsDirectory = () => {
+        const uploadDir = path.join(process.cwd(), 'uploads', 'ktp');
+        if (!fs.existsSync(uploadDir)) {
+            fs.mkdirSync(uploadDir, { recursive: true });
+            console.log(`Direktori "${uploadDir}" berhasil dibuat.`);
+        } else {
+            console.log(`Direktori "${uploadDir}" sudah ada.`);
+        }
+    };
+
 try {
   await db.authenticate();
   console.log('Database connected');
-  await db.sync(); 
+
+  createUploadsDirectory();
+
+  //await db.sync(); 
   await Users.sync(); 
   await Antrian.sync(); 
   await Feedback.sync(); 

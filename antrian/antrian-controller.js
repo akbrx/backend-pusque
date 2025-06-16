@@ -19,6 +19,24 @@ export const createAntrian = async (req, res) => {
             return res.status(404).json({ message: "User tidak ditemukan" });
         }
 
+        // --- LOGIKA BARU: CEK ANTRIAN AKTIF PENGGUNA ---
+        const existingActiveAntrian = await Antrian.findOne({
+            where: {
+                userId: userId,
+                status: {
+                    [Op.in]: ['menunggu acc admin', 'dalam antrian'] // Cari status ini
+                }
+            }
+        });
+
+        if (existingActiveAntrian) {
+            console.warn(`[BACKEND - createAntrian] User ${userId} sudah memiliki antrian aktif (ID: ${existingActiveAntrian.id}, Status: ${existingActiveAntrian.status}).`);
+            return res.status(400).json({
+                message: "Anda sudah memiliki antrian yang belum selesai. Silakan tunggu antrian Anda saat ini selesai."
+            });
+        }
+        // --- AKHIR LOGIKA BARU ---
+
         // Buat antrian baru, status otomatis 'menunggu acc admin' (default di model/database)
         const antrian = await Antrian.create({
             keluhan,
@@ -28,7 +46,7 @@ export const createAntrian = async (req, res) => {
 
         res.status(201).json({ message: "Antrian berhasil dibuat", antrian });
     } catch (error) {
-        console.error(error);
+        console.error("[BACKEND - createAntrian] Error:", error); // Lebih spesifik logging
         res.status(500).json({ message: "Internal server error" });
     }
 };
@@ -191,28 +209,6 @@ export const getAntrianUser = async (req, res) => {
     } catch (err) {
         console.error('[BACKEND - getAntrianUser] Error di dalam fungsi:', err.message);
         res.status(500).json({ message: err.message });
-    }
-};
-
-export const getRiwayatAntrianSelesai = async (req, res) => {
-    try {
-        const userId = req.userId; // userId dari token otentikasi
-        console.log('[BACKEND - getRiwayatAntrianSelesai] Menerima permintaan riwayat antrian selesai untuk userId:', userId);
-
-        const riwayatAntrian = await Antrian.findAll({
-            where: { userId: userId, status: 'selesai' }, // Cari antrian yang statusnya 'selesai'
-            order: [['updatedAt', 'DESC']], // Urutkan berdasarkan waktu selesai terbaru
-            include: [{
-                model: Users,
-                attributes: ['name', 'nik'] // Sertakan data user jika diperlukan
-            }]
-        });
-
-        console.log(`[BACKEND - getRiwayatAntrianSelesai] Ditemukan ${riwayatAntrian.length} riwayat antrian selesai.`);
-        res.json(riwayatAntrian);
-    } catch (error) {
-        console.error('[BACKEND - getRiwayatAntrianSelesai] Error fetching riwayat antrian selesai:', error.message);
-        res.status(500).json({ message: 'Internal server error saat mengambil riwayat antrian selesai' });
     }
 };
 

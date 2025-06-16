@@ -1,52 +1,124 @@
 import Feedback from "./feedback-model.js";
-import Antrian from "../antrian/antrian-model.js";
+import Antrian from "../antrian/antrian-model.js"; // Import model Antrian
+import Users from "../users/user-model.js"; // Import model User
 
-// Ambil semua feedback milik user yang sedang login
-export const getUserFeedback = async (req, res) => {
-  try {
-    // Ambil userId dari token (diasumsikan sudah ada di req.userId)
-    const feedbacks = await Feedback.findAll({
-      include: [{
-        model: Antrian,
-        where: { userId: req.userId }
-      }]
-    });
-    res.json(feedbacks);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+// Fungsi untuk mendapatkan semua feedback (untuk halaman beranda)
+export const getAllFeedback = async (req, res) => {
+    try {
+        console.log("[BACKEND - getAllFeedback] Menerima permintaan untuk semua feedback.");
+        // Ambil semua feedback dan sertakan data pengguna serta antrian jika diperlukan
+        const feedbacks = await Feedback.findAll({
+            include: [
+                {
+                    model: Antrian,
+                    attributes: ['id', 'poli', 'keluhan', 'updatedAt'], // Ambil kolom yang relevan dari Antrian
+                    include: [{
+                        model: Users, // User diakses melalui Antrian
+                        attributes: ['name'] // Ambil nama user dari model User melalui Antrian
+                    }],
+                    required: false // Gunakan false jika Anda ingin menyertakan feedback bahkan jika antrian atau user tidak ada
+                },
+                {
+                    model: Users, // Sertakan model Users secara langsung jika Feedback juga memiliki userId langsung
+                    attributes: ['name'],
+                    required: false // Gunakan false jika Anda ingin menyertakan feedback meskipun userId tidak terhubung ke Users
+                }
+            ],
+            order: [['createdAt', 'DESC']] // Urutkan feedback terbaru di atas
+        });
+
+        // Format ulang data agar sesuai dengan frontend (e.g., fb.user.name)
+        const formattedFeedbacks = feedbacks.map(feedback => {
+            let userName = 'Anonim';
+            if (feedback.Antrian && feedback.Antrian.User && feedback.Antrian.User.name) {
+                userName = feedback.Antrian.User.name;
+            } else if (feedback.User && feedback.User.name) { // Jika ada asosiasi Feedback.belongsTo(Users) langsung
+                userName = feedback.User.name;
+            }
+
+            return {
+                id: feedback.id,
+                rating: feedback.rating,
+                komentar: feedback.komentar,
+                updatedAt: feedback.updatedAt,
+                antrianId: feedback.antrianId,
+                user: {
+                    name: userName // Menggunakan nama yang ditemukan atau 'Anonim'
+                }
+            };
+        });
+        console.log(`[BACKEND - getAllFeedback] Mengirim ${formattedFeedbacks.length} feedback.`);
+        res.json(formattedFeedbacks);
+    } catch (error) {
+        console.error("[BACKEND - getAllFeedback] Error fetching all feedback:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
 };
 
-// Simpan feedback baru
+// Fungsi untuk membuat feedback baru
 export const createFeedback = async (req, res) => {
-  try {
-    const { antrianId, rating, komentar } = req.body;
-    // Cek apakah antrian milik user dan statusnya selesai
-    const antrian = await Antrian.findOne({
-      where: { id: antrianId, userId: req.userId, status: "selesai" }
-    });
-    if (!antrian) return res.status(403).json({ message: "Antrian tidak valid atau belum selesai" });
+    try {
+        const { antrianId, rating, komentar } = req.body;
+        const userId = req.userId; // Dari verifyToken middleware
 
-    // Cek apakah sudah pernah feedback untuk antrian ini
-    const existing = await Feedback.findOne({ where: { antrianId } });
-    if (existing) return res.status(400).json({ message: "Feedback sudah pernah diberikan" });
+        console.log(`[BACKEND - createFeedback] Menerima permintaan feedback dari user ${userId} untuk antrian ${antrianId}.`);
+        console.log("[BACKEND - createFeedback] Data diterima:", { antrianId, rating, komentar });
 
-    const feedback = await Feedback.create({ antrianId, rating, komentar });
-    res.status(201).json(feedback);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+        if (!antrianId || !rating) {
+            console.warn("[BACKEND - createFeedback] Validasi gagal: Antrian ID atau rating kosong.");
+            return res.status(400).json({ message: "Antrian ID dan rating wajib diisi" });
+        }
+
+        // Pastikan antrian memang milik user yang sedang login dan sudah selesai
+        const antrian = await Antrian.findOne({
+            where: { id: antrianId, userId: userId, status: 'selesai' }
+        });
+
+        if (!antrian) {
+            console.warn("[BACKEND - createFeedback] Antrian tidak ditemukan atau belum selesai untuk user ini.");
+            return res.status(404).json({ message: "Antrian tidak ditemukan atau belum selesai." });
+        }
+
+        // Cek apakah feedback untuk antrian ini sudah ada
+        const existingFeedback = await Feedback.findOne({ where: { antrianId: antrianId } });
+        if (existingFeedback) {
+            console.warn("[BACKEND - createFeedback] Feedback sudah ada untuk antrian ini.");
+            return res.status(400).json({ message: "Anda sudah memberikan feedback untuk antrian ini." });
+        }
+
+        const newFeedback = await Feedback.create({
+            antrianId,
+            rating,
+            komentar,
+            userId // Simpan userId yang memberikan feedback
+        });
+        console.log("[BACKEND - createFeedback] Feedback berhasil dibuat:", newFeedback.id);
+
+        res.status(201).json({ message: "Feedback berhasil dikirim", feedback: newFeedback });
+    } catch (error) {
+        console.error("[BACKEND - createFeedback] Error creating feedback:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
 };
 
-// (Opsional) Ambil riwayat antrian selesai milik user (untuk halaman feedback)
-export const getRiwayatAntrianSelesai = async (req, res) => {
-  try {
-    const riwayat = await Antrian.findAll({
-      where: { userId: req.userId, status: "selesai" },
-      order: [["updatedAt", "DESC"]]
-    });
-    res.json(riwayat);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+// Fungsi untuk mendapatkan feedback user tertentu (untuk halaman feedback user)
+export const getUserFeedback = async (req, res) => {
+    try {
+        const userId = req.userId; // Dari verifyToken middleware
+        console.log(`[BACKEND - getUserFeedback] Menerima permintaan feedback dari user ${userId}.`);
+
+        const feedbacks = await Feedback.findAll({
+            where: { userId: userId }, // Filter berdasarkan userId yang memberikan feedback
+            include: [{
+                model: Antrian,
+                attributes: ['id', 'poli', 'keluhan', 'updatedAt'] // Sertakan detail antrian
+            }],
+            order: [['createdAt', 'DESC']]
+        });
+        console.log(`[BACKEND - getUserFeedback] Mengirim ${feedbacks.length} feedback untuk user ${userId}.`);
+        res.json(feedbacks);
+    } catch (error) {
+        console.error("[BACKEND - getUserFeedback] Error fetching user feedback:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
 };

@@ -12,7 +12,7 @@ import { mundurkanAntrian } from '../antrian/antrian-controller.js';
 import { getAntrianUser } from '../antrian/antrian-controller.js';
 import { simpanPrediksiAntrian } from '../antrian/antrian-controller.js';
 import { getPasienPerBulan } from '../statistik/statistik-controller.js';
-import { getUserFeedback, createFeedback, getRiwayatAntrianSelesai } from '../feedback/feedback-controller.js';
+import { getAllFeedback, getUserFeedback, createFeedback, getRiwayatAntrianSelesai } from '../feedback/feedback-controller.js';
 
 const router = express.Router();
 
@@ -55,5 +55,6 @@ router.patch('/antrian/:id/prediksi', verifyToken, simpanPrediksiAntrian);
 // Feedback routes
 router.get('/feedback/user', verifyToken, getUserFeedback);
 router.post('/feedback', verifyToken, createFeedback);
+router.get('/feedback', getAllFeedback);
 
 export default router;

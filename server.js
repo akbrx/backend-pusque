@@ -49,7 +49,7 @@ app.use(cors({
     origin: [
         'http://localhost:8080',
         'http://localhost:3000',
-        'https://<YOUR_FRONTEND_APP_NAME>-production.up.railway.app' // GANTI INI DENGAN URL ASLI FRONTEND ANDA DI RAILWAY
+        'https://frontend-pusque-nine.vercel.app' // GANTI INI DENGAN URL ASLI FRONTEND ANDA DI RAILWAY
     ],
     credentials: true,
 }));

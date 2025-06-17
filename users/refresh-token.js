@@ -54,7 +54,7 @@ export const refreshToken = async (req, res) => {
             const accessToken = jwt.sign(
                 { userId, name, nik, role }, // Sertakan role di payload Access Token
                 process.env.ACCESS_TOKEN_SECRET,
-                { expiresIn: '15m' } // <-- PERUBAHAN PENTING DI SINI! (misal: 15 menit atau '1h' untuk 1 jam)
+                { expiresIn: '1d' } // <-- PERUBAHAN PENTING DI SINI! (misal: 15 menit atau '1h' untuk 1 jam)
             );
 
             // Kirim Access Token baru sebagai respons JSON.

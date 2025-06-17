@@ -49,7 +49,8 @@ app.use(cors({
     origin: [
         'http://localhost:8080',
         'http://localhost:3000',
-        'https://frontend-pusque-nine.vercel.app' // GANTI INI DENGAN URL ASLI FRONTEND ANDA DI RAILWAY
+        'https://frontend-pusque-nine.vercel.app',
+        'https://dicoding-story-app-9hgv.vercel.app'
     ],
     credentials: true,
 }));
